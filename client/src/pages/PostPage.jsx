@@ -19,6 +19,24 @@ export default function PostPage() {
 
   if (!postInfo) return '';
 
+  // const handleDelete = async (postId) => {
+  //   try {
+  //     const response = await fetch(`http://localhost:4000/post/${postId}`, {
+  //       method: 'DELETE',
+  //       credentials: 'include',
+  //     });
+  //     if (response.ok) {
+  //       window.location.href = '/';
+  //     } else {
+  //       const error = await response.json();
+  //       throw new Error(error.message || 'Failed to delete post');
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert(err.message);
+  //   }
+  // };
+
   return (
     <div className="post-page">
       <h1>{postInfo.title}</h1>
@@ -32,6 +50,9 @@ export default function PostPage() {
             </svg>
             Edit this post
           </Link>
+          {/* <button className="delete-btn" onClick={() => handleDelete(postInfo._id)}>
+          Delete this post
+        </button> */}
         </div>
       )}
       <div className="image">

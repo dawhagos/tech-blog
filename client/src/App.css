@@ -29,6 +29,7 @@ header a {
 header a.logo {
   font-weight: bold;
   font-size: 1.5rem;
+  font-family: "Roboto Mono", monospace;
 }
 header nav {
   display: flex;
@@ -151,6 +152,19 @@ div.post-page a.edit-btn {
   padding: 15px 30px;
   border-radius: 5px;
   text-decoration: none;
+}
+
+div.post-page button.delete-btn {
+  background-color: #ff0000;
+  color: #fff;
+  padding: 15px 30px;
+  border-radius: 5px;
+  text-decoration: none;
+  margin-top: 5px;
+  display: flex;
+  justify-content: center;
+  align-content: center;
+  width: 100%;
 }
 a svg {
   height: 20px;
