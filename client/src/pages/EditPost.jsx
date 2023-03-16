@@ -9,6 +9,7 @@ export default function EditPost() {
   const [content,setContent] = useState('');
   const [files, setFiles] = useState('');
   const [redirect,setRedirect] = useState(false);
+  const [expired,setExpired] = useState(false);
 
   useEffect(() => {
     fetch('http://localhost:4000/post/'+id)
@@ -21,8 +22,20 @@ export default function EditPost() {
       });
   }, []);
 
+  function handleFileChange(ev) {
+    if (ev.target.files[0].size > 2 * 1024 * 1024) {
+      alert('File too large');
+    } else {
+      setFiles(ev.target.files);
+    }
+  }
+
   async function updatePost(ev) {
     ev.preventDefault();
+    if (!files) {
+      alert('No file selected');
+      return;
+    }
     const data = new FormData();
     data.set('title', title);
     data.set('summary', summary);
@@ -38,7 +51,18 @@ export default function EditPost() {
     });
     if (response.ok) {
       setRedirect(true);
+    } else {
+      const { error } = await response.json();
+      if (error === 'Unauthorized - Token Expired') {
+        document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        setExpired(true);
+      }
+      alert(error); 
     }
+  }
+
+  if (expired) {
+    return <Navigate to={'/'} /> 
   }
 
   if (redirect) {
@@ -56,9 +80,9 @@ export default function EditPost() {
              value={summary}
              onChange={ev => setSummary(ev.target.value)} />
       <input type="file"
-             onChange={ev => setFiles(ev.target.files)} />
+             onChange={handleFileChange} />
       <Editor onChange={setContent} value={content} />
-      <button style={{marginTop:'5px'}}>Update post</button>
+      <button className="main-btn" style={{marginTop:'5px'}}>Update post</button>
     </form>
   );
 }

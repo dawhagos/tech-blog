@@ -19,7 +19,6 @@ const uploadMiddleware = multer({
 });
 const fs = require("fs");
 const { promisify } = require("util");
-const readFileAsync = promisify(fs.readFile);
 const renameSync = promisify(fs.rename);
 const isImage = require("is-image");
 const validator = require("validator");
@@ -33,6 +32,40 @@ const loginLimiter = rateLimit({
 
 const salt = bcrypt.genSaltSync(10);
 const secret = process.env.SECRET;
+
+function checkTokenExpiration(req, res, next) {
+  const token = req.cookies.token;
+
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  jwt.verify(token, process.env.SECRET, (err, decodedToken) => {
+    if (err) {
+      if (err.name === "TokenExpiredError") {
+        return res.status(401).json({ error: "Unauthorized - Token Expired" });
+      } else {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+    }
+
+    req.user = decodedToken;
+    next();
+  });
+}
+
+function errorHandler(err, req, res, next) {
+  if (err instanceof multer.MulterError) {
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({ error: "File too large" });
+    } else if (err.code === "NO_FILE") {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+  }
+  next(err);
+}
+
+app.use(errorHandler);
 
 app.use(
   cors({
@@ -96,54 +129,26 @@ app.post("/login", loginLimiter, async (req, res) => {
 
 app.get("/profile", (req, res) => {
   const { token } = req.cookies;
-  jwt.verify(token, secret, {}, (err, info) => {
-    if (err) throw err;
-    res.json(info);
-  });
+  if (token) {
+    jwt.verify(token, secret, {}, (err, info) => {
+      if (err) throw err;
+      res.json(info);
+    });
+  } else {
+    res.sendStatus(401);
+  }
 });
 
 app.post("/logout", (req, res) => {
-  res
-    .cookie("token", "", { secure: true, httpOnly: true, sameSite: "strict" })
-    .json("ok");
+  res.clearCookie("token");
+  res.redirect("/");
 });
 
-app.post("/post", uploadMiddleware.single("file"), async (req, res) => {
-  const { originalname, path } = req.file;
-  const parts = originalname.split(".");
-  const ext = parts[parts.length - 1];
-  const newPath = path.toString() + "." + ext;
-  await renameSync(path.toString(), newPath);
-
-  if (!isImage(newPath)) {
-    fs.unlinkSync(newPath);
-    return res
-      .status(400)
-      .json({ error: "Uploaded file is not a valid image" });
-  }
-
-  const { token } = req.cookies;
-  jwt.verify(token, secret, {}, async (err, info) => {
-    if (err) throw err;
-    const { title, summary, content } = req.body;
-    const sanitizedTitle = validator.escape(title);
-    const sanitizedSummary = validator.escape(summary);
-    const sanitizedContent = validator.escape(content);
-
-    const postDoc = await Post.create({
-      title: sanitizedTitle,
-      summary: sanitizedSummary,
-      content: content,
-      cover: newPath,
-      author: info.id,
-    });
-    res.json(postDoc);
-  });
-});
-
-app.put("/post", uploadMiddleware.single("file"), async (req, res) => {
-  let newPath = null;
-  if (req.file) {
+app.post(
+  "/post",
+  checkTokenExpiration,
+  uploadMiddleware.single("file"),
+  async (req, res) => {
     const { originalname, path } = req.file;
     const parts = originalname.split(".");
     const ext = parts[parts.length - 1];
@@ -156,49 +161,91 @@ app.put("/post", uploadMiddleware.single("file"), async (req, res) => {
         .status(400)
         .json({ error: "Uploaded file is not a valid image" });
     }
-  }
 
+    const { token } = req.cookies;
+    jwt.verify(token, secret, {}, async (err, info) => {
+      if (err) throw err;
+      const { title, summary, content } = req.body;
+      const sanitizedTitle = validator.escape(title);
+      const sanitizedSummary = validator.escape(summary);
+      const sanitizedContent = validator.escape(content);
+
+      const postDoc = await Post.create({
+        title: sanitizedTitle,
+        summary: sanitizedSummary,
+        content: content,
+        cover: newPath,
+        author: info.id,
+      });
+      res.json(postDoc);
+    });
+  }
+);
+
+app.put(
+  "/post",
+  checkTokenExpiration,
+  uploadMiddleware.single("file"),
+  async (req, res) => {
+    let newPath = null;
+    if (req.file) {
+      const { originalname, path } = req.file;
+      const parts = originalname.split(".");
+      const ext = parts[parts.length - 1];
+      const newPath = path.toString() + "." + ext;
+      await renameSync(path.toString(), newPath);
+
+      if (!isImage(newPath)) {
+        fs.unlinkSync(newPath);
+        return res
+          .status(400)
+          .json({ error: "Uploaded file is not a valid image" });
+      }
+    }
+
+    const { token } = req.cookies;
+    jwt.verify(token, secret, {}, async (err, info) => {
+      if (err) throw err;
+      const { id, title, summary, content } = req.body;
+      const postDoc = await Post.findById(id);
+      const isAuthor =
+        JSON.stringify(postDoc.author) === JSON.stringify(info.id);
+      if (!isAuthor) {
+        return res.status(400).json("you are not the author");
+      }
+      const sanitizedTitle = validator.escape(title);
+      const sanitizedSummary = validator.escape(summary);
+      const sanitizedContent = validator.escape(content);
+      await postDoc.updateOne({
+        title: sanitizedTitle,
+        summary: sanitizedSummary,
+        content: sanitizedContent,
+        cover: newPath ? newPath : postDoc.cover,
+      });
+
+      res.json(postDoc);
+    });
+  }
+);
+
+app.delete("/post/:postId", checkTokenExpiration, async (req, res) => {
   const { token } = req.cookies;
   jwt.verify(token, secret, {}, async (err, info) => {
     if (err) throw err;
-    const { id, title, summary, content } = req.body;
-    const postDoc = await Post.findById(id);
-    const isAuthor = JSON.stringify(postDoc.author) === JSON.stringify(info.id);
-    if (!isAuthor) {
-      return res.status(400).json("you are not the author");
+    const { postId } = req.params;
+    try {
+      const postDoc = await Post.findOne({ _id: postId, author: info.id });
+      if (!postDoc) {
+        return res.status(404).json({ error: "Post not found" });
+      }
+      await postDoc.deleteOne();
+      res.json({ message: "Post successfully deleted" });
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ error: "Internal server error" });
     }
-    const sanitizedTitle = validator.escape(title);
-    const sanitizedSummary = validator.escape(summary);
-    const sanitizedContent = validator.escape(content);
-    await postDoc.updateOne({
-      title: sanitizedTitle,
-      summary: sanitizedSummary,
-      content: sanitizedContent,
-      cover: newPath ? newPath : postDoc.cover,
-    });
-
-    res.json(postDoc);
   });
 });
-
-// app.delete("/post/:postId", async (req, res) => {
-//   const { token } = req.cookies;
-//   jwt.verify(token, secret, {}, async (err, info) => {
-//     if (err) throw err;
-//     const { postId } = req.params;
-//     try {
-//       const postDoc = await Post.findOne({ _id: postId, author: info.id });
-//       if (!postDoc) {
-//         return res.status(404).json({ error: "Post not found" });
-//       }
-//       await postDoc.deleteOne();
-//       res.redirect("/");
-//     } catch (err) {
-//       console.log(err);
-//       res.status(500).json({ error: "Internal server error" });
-//     }
-//   });
-// });
 
 app.get("/post", async (req, res) => {
   res.json(

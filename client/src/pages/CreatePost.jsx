@@ -10,13 +10,27 @@ export default function CreatePost() {
   const [content,setContent] = useState('');
   const [files, setFiles] = useState('');
   const [redirect, setRedirect] = useState(false);
+
+  function handleFileChange(ev) {
+    if (ev.target.files[0].size > 2 * 1024 * 1024) {
+      alert('File too large');
+    } else {
+      setFiles(ev.target.files);
+    }
+  }
+
   async function createNewPost(ev) {
+    ev.preventDefault();
+    if (!files) {
+      alert('No file selected');
+      return;
+    }
+
     const data = new FormData();
     data.set('title', title);
     data.set('summary', summary);
     data.set('content', content);
     data.set('file', files[0]);
-    ev.preventDefault();
     const response = await fetch('http://localhost:4000/post', {
       method: 'POST',
       body: data,
@@ -24,6 +38,13 @@ export default function CreatePost() {
     });
     if (response.ok) {
       setRedirect(true);
+    } else {
+      const { error } = await response.json();
+      if (error === 'Unauthorized - Token Expired') {
+        document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        setRedirect(true);
+      }
+      alert(error); 
     }
   }
 
@@ -41,9 +62,9 @@ export default function CreatePost() {
              value={summary}
              onChange={ev => setSummary(ev.target.value)} />
       <input type="file"
-             onChange={ev => setFiles(ev.target.files)} />
+             onChange={handleFileChange} />
       <Editor value={content} onChange={setContent} />
-      <button style={{marginTop:'5px'}}>Create post</button>
+      <button className="main-btn" style={{marginTop:'5px'}}>Create post</button>
     </form>
   );
 }

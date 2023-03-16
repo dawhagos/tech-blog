@@ -30,6 +30,7 @@ header a.logo {
   font-weight: bold;
   font-size: 1.5rem;
   font-family: "Roboto Mono", monospace;
+  cursor: pointer;
 }
 header nav {
   display: flex;
@@ -86,7 +87,7 @@ input {
   border-radius: 5px;
   background-color: #fff;
 }
-button {
+button.main-btn {
   cursor: pointer;
   width: 100%;
   display: block;
@@ -139,13 +140,17 @@ div.content p {
 div.content li {
   margin-bottom: 10px;
 }
+
 div.edit-row {
-  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 20px;
 }
-div.post-page a.edit-btn {
+
+div.post-page .edit-btn {
   background-color: #333;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 5px;
   color: #fff;
@@ -154,18 +159,19 @@ div.post-page a.edit-btn {
   text-decoration: none;
 }
 
-div.post-page button.delete-btn {
+div.post-page .delete-btn {
   background-color: #ff0000;
+  display: flex;
+  align-items: center;
+  gap: 5px;
   color: #fff;
   padding: 15px 30px;
   border-radius: 5px;
   text-decoration: none;
-  margin-top: 5px;
-  display: flex;
-  justify-content: center;
-  align-content: center;
-  width: 100%;
+  border: none;
+  cursor: pointer;
 }
+
 a svg {
   height: 20px;
 }

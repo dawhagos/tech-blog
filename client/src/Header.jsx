@@ -8,9 +8,14 @@ export default function Header() {
     fetch('http://localhost:4000/profile', {
       credentials: 'include',
     }).then(response => {
+      if (response.status === 401) {
+        // Handle not logged in user
+        setUserInfo(null);
+      } else {
       response.json().then(userInfo => {
         setUserInfo(userInfo);
       });
+    }
     });
   }, []);
 
@@ -18,8 +23,14 @@ export default function Header() {
     fetch('http://localhost:4000/logout', {
       credentials: 'include',
       method: 'POST',
+    })
+    .then(() => {
+      setUserInfo(null);
+      window.location.replace("/");
+    })
+    .catch((err) => {
+      console.log(err);
     });
-    setUserInfo(null);
   }
 
   const username = userInfo?.username;
