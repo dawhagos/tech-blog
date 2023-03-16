@@ -1,3 +1,4 @@
 .DS_Store
 .vscode
-api/uploads/*
+# api/uploads/*
+node_modules

@@ -9,7 +9,7 @@ export default function PostPage() {
   const {userInfo} = useContext(UserContext);
   const {id} = useParams();
   useEffect(() => {
-    fetch(`http://localhost:4000/post/${id}`)
+    fetch(`${import.meta.env.VITE_APP_API_URL}/post/${id}`)
       .then(response => {
         response.json().then(postInfo => {
           setPostInfo(postInfo);
@@ -21,7 +21,7 @@ export default function PostPage() {
 
   const handleDelete = async (postId) => {
     try {
-      const response = await fetch(`http://localhost:4000/post/${postId}`, {
+      const response = await fetch(`${import.meta.env.VITE_APP_API_URL}/post/${postId}`, {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -56,7 +56,7 @@ export default function PostPage() {
         </div>
       )}
       <div className="image">
-        <img src={`http://localhost:4000/${postInfo.cover}`} alt=""/>
+        <img src={`${import.meta.env.VITE_APP_API_URL}/${postInfo.cover}`} alt=""/>
       </div>
       <div className="content" dangerouslySetInnerHTML={{__html:postInfo.content}} />
     </div>

@@ -1,26 +1,14 @@
-import {useEffect, useState} from "react";
-import {Navigate, useParams} from "react-router-dom";
+import 'react-quill/dist/quill.snow.css';
+import {useState} from "react";
+import {Navigate} from "react-router-dom";
 import Editor from "../Editor";
 
-export default function EditPost() {
-  const {id} = useParams();
+export default function CreatePost() {
   const [title,setTitle] = useState('');
   const [summary,setSummary] = useState('');
   const [content,setContent] = useState('');
   const [files, setFiles] = useState('');
-  const [redirect,setRedirect] = useState(false);
-  const [expired,setExpired] = useState(false);
-
-  useEffect(() => {
-    fetch('http://localhost:4000/post/'+id)
-      .then(response => {
-        response.json().then(postInfo => {
-          setTitle(postInfo.title);
-          setContent(postInfo.content);
-          setSummary(postInfo.summary);
-        });
-      });
-  }, []);
+  const [redirect, setRedirect] = useState(false);
 
   function handleFileChange(ev) {
     if (ev.target.files[0].size > 2 * 1024 * 1024) {
@@ -30,22 +18,20 @@ export default function EditPost() {
     }
   }
 
-  async function updatePost(ev) {
+  async function createNewPost(ev) {
     ev.preventDefault();
     if (!files) {
       alert('No file selected');
       return;
     }
+
     const data = new FormData();
     data.set('title', title);
     data.set('summary', summary);
     data.set('content', content);
-    data.set('id', id);
-    if (files?.[0]) {
-      data.set('file', files?.[0]);
-    }
-    const response = await fetch('http://localhost:4000/post', {
-      method: 'PUT',
+    data.set('file', files[0]);
+    const response = await fetch(`${import.meta.env.VITE_APP_API_URL}/post`, {
+      method: 'POST',
       body: data,
       credentials: 'include',
     });
@@ -55,22 +41,17 @@ export default function EditPost() {
       const { error } = await response.json();
       if (error === 'Unauthorized - Token Expired') {
         document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        setExpired(true);
+        setRedirect(true);
       }
       alert(error); 
     }
   }
 
-  if (expired) {
-    return <Navigate to={'/'} /> 
-  }
-
   if (redirect) {
-    return <Navigate to={'/post/'+id} />
+    return <Navigate to={'/'} />
   }
-
   return (
-    <form onSubmit={updatePost}>
+    <form onSubmit={createNewPost}>
       <input type="title"
              placeholder={'Title'}
              value={title}
@@ -81,8 +62,8 @@ export default function EditPost() {
              onChange={ev => setSummary(ev.target.value)} />
       <input type="file"
              onChange={handleFileChange} />
-      <Editor onChange={setContent} value={content} />
-      <button className="main-btn" style={{marginTop:'5px'}}>Update post</button>
+      <Editor value={content} onChange={setContent} />
+      <button className="main-btn" style={{marginTop:'5px'}}>Create post</button>
     </form>
   );
 }
