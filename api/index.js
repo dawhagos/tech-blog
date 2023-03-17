@@ -40,7 +40,7 @@ function checkTokenExpiration(req, res, next) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  jwt.verify(token, process.env.SECRET, (err, decodedToken) => {
+  jwt.verify(token, secret, (err, decodedToken) => {
     if (err) {
       if (err.name === "TokenExpiredError") {
         return res.status(401).json({ error: "Unauthorized - Token Expired" });
@@ -262,7 +262,9 @@ app.get("/post/:id", async (req, res) => {
   res.json(postDoc);
 });
 
-mongoose.connect(process.env.MONGO_URL).then(() => {
-  console.log("listening on port 4000");
-  app.listen(4000);
-});
+// mongoose.connect(process.env.MONGO_URL).then(() => {
+//   console.log(`listening on port ${process.env.PORT}`);
+//   app.listen(process.env.PORT);
+// });
+
+module.exports = app;
