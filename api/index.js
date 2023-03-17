@@ -263,8 +263,8 @@ app.get("/post/:id", async (req, res) => {
 });
 
 mongoose.connect(process.env.MONGO_URL).then(() => {
-  console.log(`listening on port ${process.env.PORT}`);
   // app.listen(process.env.PORT);
+  // console.log(`listening on port ${process.env.PORT}`);
 });
 
 module.exports = app;
