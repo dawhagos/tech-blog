@@ -4,15 +4,19 @@ config();
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const axios = require("axios");
 const User = require("./models/User");
 const Post = require("./models/Post");
 const bcrypt = require("bcryptjs");
 const app = express();
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
+const os = require("os");
 const multer = require("multer");
+const tmpDir = os.tmpdir();
 const uploadMiddleware = multer({
-  dest: "uploads/",
+  // dest: "uploads/",
+  dest: tmpDir,
   limits: {
     fileSize: 2 * 1024 * 1024, // 2MB in bytes
   },
@@ -69,7 +73,7 @@ app.use(errorHandler);
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: true,
     credentials: true,
   })
 );
@@ -83,7 +87,32 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/uploads", express.static(__dirname + "/uploads"));
+app.use("/uploads", express.static(__dirname + tmpDir));
+
+async function getRandomImage() {
+  try {
+    const response = await axios.get("https://api.unsplash.com/photos/random", {
+      headers: {
+        Authorization: `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}, Secret ${process.env.UNSPLASH_SECRET_KEY}`,
+      },
+      params: {
+        query: "technology",
+      },
+    });
+    return response.data.urls.regular;
+  } catch (error) {
+    return null;
+  }
+}
+
+app.get("/random", async (req, res) => {
+  const randomImageSrc = await getRandomImage();
+  if (randomImageSrc) {
+    res.send({ imageSrc: randomImageSrc });
+  } else {
+    res.status(500).send("Internal Server Error");
+  }
+});
 
 app.post("/register", async (req, res) => {
   const { username, password } = req.body;
@@ -106,7 +135,7 @@ app.post("/login", loginLimiter, async (req, res) => {
   if (passOk) {
     try {
       const token = await jwt.sign({ username, id: userDoc._id }, secret, {
-        expiresIn: "1h",
+        expiresIn: "4h",
       });
 
       res
@@ -192,7 +221,7 @@ app.put(
       const { originalname, path } = req.file;
       const parts = originalname.split(".");
       const ext = parts[parts.length - 1];
-      const newPath = path.toString() + "." + ext;
+      newPath = path.toString() + "." + ext;
       await renameSync(path.toString(), newPath);
 
       if (!isImage(newPath)) {
@@ -219,8 +248,8 @@ app.put(
       await postDoc.updateOne({
         title: sanitizedTitle,
         summary: sanitizedSummary,
-        content: sanitizedContent,
-        cover: newPath ? newPath : postDoc.cover,
+        content: content,
+        cover: newPath,
       });
 
       res.json(postDoc);
