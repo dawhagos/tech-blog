@@ -291,7 +291,7 @@ app.get("/post/:id", async (req, res) => {
   res.json(postDoc);
 });
 
-mongoose
+await mongoose
   .connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
