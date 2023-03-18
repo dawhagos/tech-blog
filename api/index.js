@@ -291,9 +291,16 @@ app.get("/post/:id", async (req, res) => {
   res.json(postDoc);
 });
 
-mongoose.connect(process.env.MONGO_URL).then(() => {
-  // app.listen(process.env.PORT);
-  // console.log(`listening on port ${process.env.PORT}`);
-});
+mongoose
+  .connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true,
+    useFindAndModify: false,
+  })
+  .then(() => {
+    // app.listen(process.env.PORT);
+    // console.log(`listening on port ${process.env.PORT}`);
+  });
 
 module.exports = app;
