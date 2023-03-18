@@ -4,6 +4,18 @@ config();
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
+async function connectToDatabase() {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log("Connected to MongoDB");
+  } catch (error) {
+    console.error(error);
+  }
+}
+connectToDatabase();
 const axios = require("axios");
 const User = require("./models/User");
 const Post = require("./models/Post");
@@ -297,19 +309,5 @@ app.get("/post/:id", async (req, res) => {
 //     // app.listen(process.env.PORT);
 //     // console.log(`listening on port ${process.env.PORT}`);
 //   });
-
-async function connectToDatabase() {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log("Connected to MongoDB");
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-connectToDatabase();
 
 module.exports = app;
