@@ -291,14 +291,25 @@ app.get("/post/:id", async (req, res) => {
   res.json(postDoc);
 });
 
-await mongoose
-  .connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => {
-    // app.listen(process.env.PORT);
-    // console.log(`listening on port ${process.env.PORT}`);
-  });
+// mongoose
+//   .connect(process.env.MONGODB_URI)
+//   .then(() => {
+//     // app.listen(process.env.PORT);
+//     // console.log(`listening on port ${process.env.PORT}`);
+//   });
+
+async function connectToDatabase() {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log("Connected to MongoDB");
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+connectToDatabase();
 
 module.exports = app;
