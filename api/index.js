@@ -5,15 +5,17 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 
-try {
-  mongoose.connect(process.env.MONGODB_URI, {
+mongoose
+  .connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("Connected to MongoDB");
+  })
+  .catch((error) => {
+    console.error(error);
   });
-  console.log("Connected to MongoDB");
-} catch (error) {
-  console.error(error);
-}
 
 const axios = require("axios");
 const User = require("./models/User");
@@ -98,7 +100,8 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/uploads", express.static(__dirname + tmpDir));
+app.use("/uploads", express.static(tmpDir));
+// app.use("/uploads", express.static(__dirname + "/uploads")); // local
 
 async function getRandomImage() {
   try {
