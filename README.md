@@ -18,7 +18,7 @@ To run the application locally, follow these steps:
 2. Install dependencies: npm install
 3. Create a .env file in the root of the project directory with the following variable:
 ```
-VITE_APP_API_URL=your-local-api-endpoint>
+VITE_APP_API_URL=<your-local-api-endpoint>
 ```
 4. Create a .env file in the api folder with the following variable:
 ```
