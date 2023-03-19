@@ -119,7 +119,7 @@ async function getRandomImage() {
   }
 }
 
-app.get("/random", async (req, res) => {
+app.get("/api/random", async (req, res) => {
   const randomImageSrc = await getRandomImage();
   if (randomImageSrc) {
     res.send({ imageSrc: randomImageSrc });
@@ -128,7 +128,7 @@ app.get("/random", async (req, res) => {
   }
 });
 
-app.post("/register", async (req, res) => {
+app.post("/api/register", async (req, res) => {
   const { username, password } = req.body;
   try {
     const userDoc = await User.create({
@@ -142,7 +142,7 @@ app.post("/register", async (req, res) => {
   }
 });
 
-app.post("/login", loginLimiter, async (req, res) => {
+app.post("/api/login", loginLimiter, async (req, res) => {
   const { username, password } = req.body;
   const userDoc = await User.findOne({ username });
   const passOk = bcrypt.compareSync(password, userDoc.password);
@@ -170,7 +170,7 @@ app.post("/login", loginLimiter, async (req, res) => {
   }
 });
 
-app.get("/profile", (req, res) => {
+app.get("/api/profile", (req, res) => {
   const { token } = req.cookies;
   if (token) {
     jwt.verify(token, secret, {}, (err, info) => {
@@ -182,13 +182,13 @@ app.get("/profile", (req, res) => {
   }
 });
 
-app.post("/logout", (req, res) => {
+app.post("/api/logout", (req, res) => {
   res.clearCookie("token");
   res.redirect("/");
 });
 
 app.post(
-  "/post",
+  "/api/post",
   checkTokenExpiration,
   uploadMiddleware.single("file"),
   async (req, res) => {
@@ -226,7 +226,7 @@ app.post(
 );
 
 app.put(
-  "/post",
+  "/api/post",
   checkTokenExpiration,
   uploadMiddleware.single("file"),
   async (req, res) => {
@@ -271,7 +271,7 @@ app.put(
   }
 );
 
-app.delete("/post/:postId", checkTokenExpiration, async (req, res) => {
+app.delete("/api/post/:postId", checkTokenExpiration, async (req, res) => {
   const { token } = req.cookies;
   jwt.verify(token, secret, {}, async (err, info) => {
     if (err) throw err;
@@ -290,7 +290,7 @@ app.delete("/post/:postId", checkTokenExpiration, async (req, res) => {
   });
 });
 
-app.get("/post", async (req, res) => {
+app.get("/api/post", async (req, res) => {
   res.json(
     await Post.find()
       .populate("author", ["username"])
@@ -299,7 +299,7 @@ app.get("/post", async (req, res) => {
   );
 });
 
-app.get("/post/:id", async (req, res) => {
+app.get("/api/post/:id", async (req, res) => {
   const { id } = req.params;
   const postDoc = await Post.findById(id).populate("author", ["username"]);
   res.json(postDoc);
