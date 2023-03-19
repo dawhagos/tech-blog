@@ -100,7 +100,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/api", express.static(tmpDir));
+app.use("/api/tmp", express.static(tmpDir));
 // app.use("/uploads", express.static(__dirname + "/uploads")); // local
 
 async function getRandomImage() {
