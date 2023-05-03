@@ -10,13 +10,13 @@ export default function CreatePost() {
   const [files, setFiles] = useState("");
   const [redirect, setRedirect] = useState(false);
 
-  function handleFileChange(ev) {
-    if (ev.target.files[0].size > 2 * 1024 * 1024) {
-      alert("File too large");
-    } else {
-      setFiles(ev.target.files);
-    }
-  }
+  // function handleFileChange(ev) {
+  //   if (ev.target.files[0].size > 2 * 1024 * 1024) {
+  //     alert("File too large");
+  //   } else {
+  //     setFiles(ev.target.files);
+  //   }
+  // }
 
   async function createNewPost(ev) {
     ev.preventDefault();
@@ -73,7 +73,7 @@ export default function CreatePost() {
         value={summary}
         onChange={(ev) => setSummary(ev.target.value)}
       />
-      <input type="file" onChange={handleFileChange} />
+      {/* <input type="file" onChange={handleFileChange} /> */}
       <Editor value={content} onChange={setContent} />
       <button className="main-btn" style={{ marginTop: "5px" }}>
         Create post
