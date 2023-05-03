@@ -113,16 +113,23 @@ async function getRandomImage() {
         query: "technology",
       },
     });
-    return response.data.urls.regular;
+    return {
+      imageSrc: response.data.urls.regular,
+      downloadUrl: response.data.links.download,
+      photographerName: response.data.user.name,
+      photographerUsername: response.data.user.username,
+    };
   } catch (error) {
     return null;
   }
 }
 
 app.get("/api/random", async (req, res) => {
-  const randomImageSrc = await getRandomImage();
-  if (randomImageSrc) {
-    res.send({ imageSrc: randomImageSrc });
+  const randomImageData = await getRandomImage();
+  if (randomImageData) {
+    const { imageSrc, downloadUrl, photographerName, photographerUsername } =
+      randomImageData;
+    res.send({ imageSrc, downloadUrl, photographerName, photographerUsername });
   } else {
     res.status(500).send("Internal Server Error");
   }
@@ -192,23 +199,23 @@ app.post(
   checkTokenExpiration,
   uploadMiddleware.single("file"),
   async (req, res) => {
-    const { originalname, path } = req.file;
-    const parts = originalname.split(".");
-    const ext = parts[parts.length - 1];
-    const newPath = path.toString() + "." + ext;
-    await renameSync(path.toString(), newPath);
+    // const { originalname, path } = req.file;
+    // const parts = originalname.split(".");
+    // const ext = parts[parts.length - 1];
+    // const newPath = path.toString() + "." + ext;
+    // await renameSync(path.toString(), newPath);
 
-    if (!isImage(newPath)) {
-      fs.unlinkSync(newPath);
-      return res
-        .status(400)
-        .json({ error: "Uploaded file is not a valid image" });
-    }
+    // if (!isImage(newPath)) {
+    //   fs.unlinkSync(newPath);
+    //   return res
+    //     .status(400)
+    //     .json({ error: "Uploaded file is not a valid image" });
+    // }
 
     const { token } = req.cookies;
     jwt.verify(token, secret, {}, async (err, info) => {
       if (err) throw err;
-      const { title, summary, content } = req.body;
+      const { title, summary, content, file } = req.body;
       const sanitizedTitle = validator.escape(title);
       const sanitizedSummary = validator.escape(summary);
       const sanitizedContent = validator.escape(content);
@@ -217,7 +224,7 @@ app.post(
         title: sanitizedTitle,
         summary: sanitizedSummary,
         content: content,
-        cover: newPath,
+        cover: file,
         author: info.id,
       });
       res.json(postDoc);
@@ -231,25 +238,25 @@ app.put(
   uploadMiddleware.single("file"),
   async (req, res) => {
     let newPath = null;
-    if (req.file) {
-      const { originalname, path } = req.file;
-      const parts = originalname.split(".");
-      const ext = parts[parts.length - 1];
-      newPath = path.toString() + "." + ext;
-      await renameSync(path.toString(), newPath);
+    // if (req.file) {
+    //   const { originalname, path } = req.file;
+    //   const parts = originalname.split(".");
+    //   const ext = parts[parts.length - 1];
+    //   newPath = path.toString() + "." + ext;
+    //   await renameSync(path.toString(), newPath);
 
-      if (!isImage(newPath)) {
-        fs.unlinkSync(newPath);
-        return res
-          .status(400)
-          .json({ error: "Uploaded file is not a valid image" });
-      }
-    }
+    //   if (!isImage(newPath)) {
+    //     fs.unlinkSync(newPath);
+    //     return res
+    //       .status(400)
+    //       .json({ error: "Uploaded file is not a valid image" });
+    //   }
+    // }
 
     const { token } = req.cookies;
     jwt.verify(token, secret, {}, async (err, info) => {
       if (err) throw err;
-      const { id, title, summary, content } = req.body;
+      const { id, title, summary, content, file } = req.body;
       const postDoc = await Post.findById(id);
       const isAuthor =
         JSON.stringify(postDoc.author) === JSON.stringify(info.id);
@@ -263,7 +270,7 @@ app.put(
         title: sanitizedTitle,
         summary: sanitizedSummary,
         content: content,
-        cover: newPath,
+        cover: file,
       });
 
       res.json(postDoc);
@@ -305,11 +312,9 @@ app.get("/api/post/:id", async (req, res) => {
   res.json(postDoc);
 });
 
-// mongoose
-//   .connect(process.env.MONGODB_URI)
-//   .then(() => {
-//     // app.listen(process.env.PORT);
-//     // console.log(`listening on port ${process.env.PORT}`);
-//   });
+// mongoose.connect(process.env.MONGODB_URI).then(() => {
+//   app.listen(process.env.PORT);
+//   console.log(`listening on port ${process.env.PORT}`);
+// });
 
 module.exports = app;

@@ -20,16 +20,20 @@ export default function CreatePost() {
 
   async function createNewPost(ev) {
     ev.preventDefault();
-    if (!files) {
-      alert("No file selected");
-      return;
-    }
+    // if (!files) {
+    //   alert("No file selected");
+    //   return;
+    // }
 
     const data = new FormData();
     data.set("title", title);
     data.set("summary", summary);
     data.set("content", content);
-    data.set("file", files[0]);
+    if (!files) {
+      data.set("file", "unsplash");
+    } else {
+      data.set("file", files[0]);
+    }
     const response = await fetch(`${import.meta.env.VITE_APP_API_URL}/post`, {
       method: "POST",
       body: data,
@@ -53,6 +57,10 @@ export default function CreatePost() {
   }
   return (
     <form onSubmit={createNewPost}>
+      <div className="notice-bar">
+        Notice: Currently all images are not being saved so your post will
+        utilize a template image. Sorry for the inconveinience!
+      </div>
       <input
         type="title"
         placeholder={"Title"}

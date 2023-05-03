@@ -13,23 +13,32 @@ export default function Post({
 }) {
   const [imageSrc, setImageSrc] = useState(null);
 
+  // useEffect(() => {
+  //   fetch(`${import.meta.env.VITE_APP_API_URL}/${cover}`)
+  //     .then((response) => {
+  //       if (!response.ok) {
+  //         fetch(`${import.meta.env.VITE_APP_API_URL}/random`)
+  //           .then((response) => response.text())
+  //           .then((data) => {
+  //             const parsedData = JSON.parse(data);
+  //             setImageSrc(parsedData.imageSrc);
+  //           })
+  //           .catch((error) => console.error(error));
+  //       } else {
+  //         setImageSrc(`${import.meta.env.VITE_APP_API_URL}/${cover}`);
+  //       }
+  //     })
+  //     .catch((error) => {
+  //       console.error(error);
+  //     });
+  // }, [cover]);
+
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_APP_API_URL}/${cover}`)
-      .then((response) => {
-        if (!response.ok) {
-          fetch(`${import.meta.env.VITE_APP_API_URL}/random`)
-            .then((response) => response.text())
-            .then((data) => {
-              const parsedData = JSON.parse(data);
-              setImageSrc(parsedData.imageSrc);
-            })
-            .catch((error) => console.error(error));
-        } else {
-          setImageSrc(`${import.meta.env.VITE_APP_API_URL}/${cover}`);
-        }
-      })
-      .catch((error) => {
-        console.error(error);
+    fetch(`${import.meta.env.VITE_APP_API_URL}/random`)
+      .then((response) => response.text())
+      .then((data) => {
+        const parsedData = JSON.parse(data);
+        setImageSrc(parsedData.imageSrc);
       });
   }, [cover]);
 
