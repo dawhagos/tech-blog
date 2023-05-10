@@ -4,5 +4,13 @@
       "source": "/api/(.*)",
       "destination": "/api"
     }
-  ]
+  ],
+  "fallback": {
+    "rewrites": [
+      {
+        "source": "/*",
+        "destination": "/index.html"
+      }
+    ]
+  }
 }
