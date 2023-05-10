@@ -1,47 +1,14 @@
 import { formatISO9075 } from "date-fns";
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
 
 export default function Post({
   _id,
   title,
   summary,
-  cover,
-  content,
+  imageSrc,
   createdAt,
   author,
 }) {
-  const [imageSrc, setImageSrc] = useState(null);
-
-  // useEffect(() => {
-  //   fetch(`${import.meta.env.VITE_APP_API_URL}/${cover}`)
-  //     .then((response) => {
-  //       if (!response.ok) {
-  //         fetch(`${import.meta.env.VITE_APP_API_URL}/random`)
-  //           .then((response) => response.text())
-  //           .then((data) => {
-  //             const parsedData = JSON.parse(data);
-  //             setImageSrc(parsedData.imageSrc);
-  //           })
-  //           .catch((error) => console.error(error));
-  //       } else {
-  //         setImageSrc(`${import.meta.env.VITE_APP_API_URL}/${cover}`);
-  //       }
-  //     })
-  //     .catch((error) => {
-  //       console.error(error);
-  //     });
-  // }, [cover]);
-
-  useEffect(() => {
-    fetch(`${import.meta.env.VITE_APP_API_URL}/random`)
-      .then((response) => response.text())
-      .then((data) => {
-        const parsedData = JSON.parse(data);
-        setImageSrc(parsedData.imageSrc);
-      });
-  }, [cover]);
-
   return (
     <div className="post">
       <div className="image">

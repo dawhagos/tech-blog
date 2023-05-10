@@ -6,11 +6,6 @@ import { Link } from "react-router-dom";
 
 export default function PostPage() {
   const [postInfo, setPostInfo] = useState(null);
-  const [imageSrc, setImageSrc] = useState("");
-  const [photographerName, setPhotographerName] = useState("");
-  const [downloadUrl, setDownloadUrl] = useState("");
-  const [photographerUsername, setPhotographerUsername] = useState("");
-  const [photographerProfileUrl, setPhotographerProfileUrl] = useState("");
   const { userInfo } = useContext(UserContext);
   const { id } = useParams();
   useEffect(() => {
@@ -21,41 +16,6 @@ export default function PostPage() {
     });
   }, [id]);
 
-  useEffect(() => {
-    if (postInfo && postInfo.cover) {
-      // fetch(`${import.meta.env.VITE_APP_API_URL}/${postInfo.cover}`)
-      //   .then((response) => {
-      //     if (response.ok) {
-      //       setImageSrc(
-      //         `${import.meta.env.VITE_APP_API_URL}/${postInfo.cover}`
-      //       );
-      //     } else {
-      //       fetch(`${import.meta.env.VITE_APP_API_URL}/random`)
-      //         .then((response) => response.text())
-      //         .then((imageSrc) => {
-      //           const parsedData = JSON.parse(imageSrc);
-      //           setImageSrc(parsedData.imageSrc);
-      //         });
-      //     }
-      //   })
-      //   .catch((error) => {
-      //     console.error(error);
-      //     setImageSrc(null);
-      //   });
-
-      fetch(`${import.meta.env.VITE_APP_API_URL}/random`)
-        .then((response) => response.json())
-        .then((data) => {
-          setImageSrc(data.imageSrc);
-          setDownloadUrl(data.downloadUrl);
-          setPhotographerName(data.photographerName);
-          setPhotographerUsername(data.photographerUsername);
-          setPhotographerProfileUrl(
-            `https://unsplash.com/@${data.photographerUsername}?utm_source=your_app_name&utm_medium=referral`
-          );
-        });
-    }
-  }, [postInfo]);
   if (!postInfo) return "";
 
   const handleDelete = async (postId) => {
@@ -112,17 +72,17 @@ export default function PostPage() {
         </div>
       )}
       <div className="image">
-        <a href={imageSrc} target="_blank" rel="noopener noreferrer">
-          <img src={imageSrc} alt="" />
+        <a href={postInfo.imageSrc} target="_blank" rel="noopener noreferrer">
+          <img src={postInfo.imageSrc} alt="" />
         </a>
         <div className="photographer">
           Photo by{" "}
           <a
-            href={photographerProfileUrl}
+            href={`https://unsplash.com/@${postInfo.photographerUsername}?utm_source=your_app_name&utm_medium=referral`}
             target="_blank"
             rel="noopener noreferrer"
           >
-            <u>{photographerName}</u>
+            <u>{postInfo.photographerName}</u>
           </a>{" "}
           on{" "}
           <a

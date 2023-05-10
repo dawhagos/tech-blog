@@ -7,7 +7,6 @@ export default function EditPost() {
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
   const [content, setContent] = useState("");
-  const [files, setFiles] = useState("");
   const [redirect, setRedirect] = useState(false);
   const [expired, setExpired] = useState(false);
 
@@ -21,28 +20,13 @@ export default function EditPost() {
     });
   }, []);
 
-  function handleFileChange(ev) {
-    if (ev.target.files[0].size > 2 * 1024 * 1024) {
-      alert("File too large");
-    } else {
-      setFiles(ev.target.files);
-    }
-  }
-
   async function updatePost(ev) {
     ev.preventDefault();
-    if (!files) {
-      alert("No file selected");
-      return;
-    }
     const data = new FormData();
     data.set("title", title);
     data.set("summary", summary);
     data.set("content", content);
     data.set("id", id);
-    if (files?.[0]) {
-      data.set("file", files[0]);
-    }
     const response = await fetch(`${import.meta.env.VITE_APP_API_URL}/post`, {
       method: "PUT",
       body: data,
@@ -83,7 +67,6 @@ export default function EditPost() {
         value={summary}
         onChange={(ev) => setSummary(ev.target.value)}
       />
-      <input type="file" onChange={handleFileChange} />
       <Editor onChange={setContent} value={content} />
       <button className="main-btn" style={{ marginTop: "5px" }}>
         Update post

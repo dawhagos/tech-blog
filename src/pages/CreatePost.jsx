@@ -7,33 +7,17 @@ export default function CreatePost() {
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
   const [content, setContent] = useState("");
-  const [files, setFiles] = useState("");
-  const [redirect, setRedirect] = useState(false);
 
-  // function handleFileChange(ev) {
-  //   if (ev.target.files[0].size > 2 * 1024 * 1024) {
-  //     alert("File too large");
-  //   } else {
-  //     setFiles(ev.target.files);
-  //   }
-  // }
+  const [redirect, setRedirect] = useState(false);
 
   async function createNewPost(ev) {
     ev.preventDefault();
-    // if (!files) {
-    //   alert("No file selected");
-    //   return;
-    // }
 
     const data = new FormData();
     data.set("title", title);
     data.set("summary", summary);
     data.set("content", content);
-    if (!files) {
-      data.set("file", "unsplash");
-    } else {
-      data.set("file", files[0]);
-    }
+
     const response = await fetch(`${import.meta.env.VITE_APP_API_URL}/post`, {
       method: "POST",
       body: data,
@@ -62,18 +46,17 @@ export default function CreatePost() {
         utilize a template image. Sorry for the inconveinience!
       </div>
       <input
-        type="title"
+        type="text"
         placeholder={"Title"}
         value={title}
         onChange={(ev) => setTitle(ev.target.value)}
       />
       <input
-        type="summary"
+        type="text"
         placeholder={"Summary"}
         value={summary}
         onChange={(ev) => setSummary(ev.target.value)}
       />
-      {/* <input type="file" onChange={handleFileChange} /> */}
       <Editor value={content} onChange={setContent} />
       <button className="main-btn" style={{ marginTop: "5px" }}>
         Create post

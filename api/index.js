@@ -24,26 +24,18 @@ const bcrypt = require("bcryptjs");
 const app = express();
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
-const os = require("os");
 const multer = require("multer");
-const tmpDir = os.tmpdir();
-const uploadMiddleware = multer({
-  // dest: "uploads/",
-  dest: tmpDir,
-  limits: {
-    fileSize: 2 * 1024 * 1024, // 2MB in bytes
-  },
-});
-const fs = require("fs");
-const { promisify } = require("util");
-const renameSync = promisify(fs.rename);
-const isImage = require("is-image");
+const uploadMiddleware = multer();
 const validator = require("validator");
+const createDOMPurify = require("dompurify");
+const { JSDOM } = require("jsdom");
+const window = new JSDOM("").window;
+const DOMPurify = createDOMPurify(window);
 const rateLimit = require("express-rate-limit");
 
 const loginLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 5, // limit each IP to 5 requests per minute
+  windowMs: 60 * 1000,
+  max: 5,
   message: "Too many login attempts. Please try again later.",
 });
 
@@ -71,19 +63,6 @@ function checkTokenExpiration(req, res, next) {
   });
 }
 
-function errorHandler(err, req, res, next) {
-  if (err instanceof multer.MulterError) {
-    if (err.code === "LIMIT_FILE_SIZE") {
-      return res.status(400).json({ error: "File too large" });
-    } else if (err.code === "NO_FILE") {
-      return res.status(400).json({ error: "No file uploaded" });
-    }
-  }
-  next(err);
-}
-
-app.use(errorHandler);
-
 app.use(
   cors({
     origin: true,
@@ -99,9 +78,6 @@ app.use((req, res, next) => {
   );
   next();
 });
-
-app.use("/api/tmp", express.static(tmpDir));
-// app.use("/uploads", express.static(__dirname + "/uploads")); // local
 
 async function getRandomImage() {
   try {
@@ -123,17 +99,6 @@ async function getRandomImage() {
     return null;
   }
 }
-
-app.get("/api/random", async (req, res) => {
-  const randomImageData = await getRandomImage();
-  if (randomImageData) {
-    const { imageSrc, downloadUrl, photographerName, photographerUsername } =
-      randomImageData;
-    res.send({ imageSrc, downloadUrl, photographerName, photographerUsername });
-  } else {
-    res.status(500).send("Internal Server Error");
-  }
-});
 
 app.post("/api/register", async (req, res) => {
   const { username, password } = req.body;
@@ -197,34 +162,24 @@ app.post("/api/logout", (req, res) => {
 app.post(
   "/api/post",
   checkTokenExpiration,
-  uploadMiddleware.single("file"),
+  uploadMiddleware.none(),
   async (req, res) => {
-    // const { originalname, path } = req.file;
-    // const parts = originalname.split(".");
-    // const ext = parts[parts.length - 1];
-    // const newPath = path.toString() + "." + ext;
-    // await renameSync(path.toString(), newPath);
-
-    // if (!isImage(newPath)) {
-    //   fs.unlinkSync(newPath);
-    //   return res
-    //     .status(400)
-    //     .json({ error: "Uploaded file is not a valid image" });
-    // }
-
     const { token } = req.cookies;
     jwt.verify(token, secret, {}, async (err, info) => {
       if (err) throw err;
-      const { title, summary, content, file } = req.body;
+      const { title, summary, content } = req.body;
       const sanitizedTitle = validator.escape(title);
       const sanitizedSummary = validator.escape(summary);
-      const sanitizedContent = validator.escape(content);
+      const sanitizedContent = DOMPurify.sanitize(content);
 
+      const randomImageData = await getRandomImage();
       const postDoc = await Post.create({
         title: sanitizedTitle,
         summary: sanitizedSummary,
-        content: content,
-        cover: file,
+        content: sanitizedContent,
+        imageSrc: randomImageData.imageSrc,
+        photographerName: randomImageData.photographerName,
+        photographerUsername: randomImageData.photographerUsername,
         author: info.id,
       });
       res.json(postDoc);
@@ -235,28 +190,12 @@ app.post(
 app.put(
   "/api/post",
   checkTokenExpiration,
-  uploadMiddleware.single("file"),
+  uploadMiddleware.none(),
   async (req, res) => {
-    let newPath = null;
-    // if (req.file) {
-    //   const { originalname, path } = req.file;
-    //   const parts = originalname.split(".");
-    //   const ext = parts[parts.length - 1];
-    //   newPath = path.toString() + "." + ext;
-    //   await renameSync(path.toString(), newPath);
-
-    //   if (!isImage(newPath)) {
-    //     fs.unlinkSync(newPath);
-    //     return res
-    //       .status(400)
-    //       .json({ error: "Uploaded file is not a valid image" });
-    //   }
-    // }
-
     const { token } = req.cookies;
     jwt.verify(token, secret, {}, async (err, info) => {
       if (err) throw err;
-      const { id, title, summary, content, file } = req.body;
+      const { id, title, summary, content } = req.body;
       const postDoc = await Post.findById(id);
       const isAuthor =
         JSON.stringify(postDoc.author) === JSON.stringify(info.id);
@@ -265,15 +204,17 @@ app.put(
       }
       const sanitizedTitle = validator.escape(title);
       const sanitizedSummary = validator.escape(summary);
-      const sanitizedContent = validator.escape(content);
-      await postDoc.updateOne({
+      const sanitizedContent = DOMPurify.sanitize(content);
+      const update = {
         title: sanitizedTitle,
         summary: sanitizedSummary,
-        content: content,
-        cover: file,
-      });
+        content: sanitizedContent,
+      };
 
-      res.json(postDoc);
+      await postDoc.updateOne(update);
+      const updatedPostDoc = await Post.findById(id);
+
+      res.json(updatedPostDoc);
     });
   }
 );

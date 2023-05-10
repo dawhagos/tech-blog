@@ -6,7 +6,9 @@ const PostSchema = new Schema(
     title: String,
     summary: String,
     content: String,
-    cover: String,
+    imageSrc: String,
+    photographerName: String,
+    photographerUsername: String,
     author: { type: Schema.Types.ObjectId, ref: "User" },
   },
   {
