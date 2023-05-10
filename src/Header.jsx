@@ -1,40 +1,43 @@
-import {Link} from "react-router-dom";
-import {useContext, useEffect} from "react";
-import {UserContext} from "./UserContext";
+import { Link } from "react-router-dom";
+import { useContext, useEffect } from "react";
+import { UserContext } from "./UserContext";
 
 export default function Header() {
-  const {setUserInfo,userInfo} = useContext(UserContext);
+  const { setUserInfo, userInfo } = useContext(UserContext);
+  const username = userInfo?.username;
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_APP_API_URL}/profile`, {
-      credentials: 'include',
-    }).then(response => {
-      if (response.status !== 401) {
-      response.json().then(userInfo => {
-        setUserInfo(userInfo);
+    if (userInfo !== null && username) {
+      fetch(`${import.meta.env.VITE_APP_API_URL}/profile`, {
+        credentials: "include",
+      }).then((response) => {
+        if (response.status !== 401) {
+          response.json().then((userInfo) => {
+            setUserInfo(userInfo);
+          });
+        }
       });
     }
-    });
   }, []);
 
   function logout() {
     fetch(`${import.meta.env.VITE_APP_API_URL}/logout`, {
-      credentials: 'include',
-      method: 'POST',
+      credentials: "include",
+      method: "POST",
     })
-    .then(() => {
-      setUserInfo(null);
-      window.location.replace("/");
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+      .then(() => {
+        setUserInfo(null);
+        window.location.replace("/");
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   }
-
-  const username = userInfo?.username;
 
   return (
     <header>
-      <Link to="/" className="logo">Dawit Develops</Link>
+      <Link to="/" className="logo">
+        Dawit Develops
+      </Link>
       <nav>
         {username && (
           <>
