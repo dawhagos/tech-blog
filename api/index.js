@@ -5,17 +5,17 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 
-// mongoose
-//   .connect(process.env.MONGODB_URI, {
-//     useNewUrlParser: true,
-//     useUnifiedTopology: true,
-//   })
-//   .then(() => {
-//     console.log("Connected to MongoDB");
-//   })
-//   .catch((error) => {
-//     console.error(error);
-//   });
+mongoose
+  .connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("Connected to MongoDB");
+  })
+  .catch((error) => {
+    console.error(error);
+  });
 
 const axios = require("axios");
 const User = require("./models/User");
@@ -258,9 +258,9 @@ app.get("/api/post/:id", async (req, res) => {
   }
 });
 
-mongoose.connect(process.env.MONGODB_URI).then(() => {
-  app.listen(process.env.PORT);
-  console.log(`listening on port ${process.env.PORT}`);
-});
+// mongoose.connect(process.env.MONGODB_URI).then(() => {
+//   app.listen(process.env.PORT);
+//   console.log(`listening on port ${process.env.PORT}`);
+// });
 
-// module.exports = app;
+module.exports = app;
