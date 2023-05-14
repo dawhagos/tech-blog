@@ -3,18 +3,32 @@ import { useParams } from "react-router-dom";
 import { formatISO9075 } from "date-fns";
 import { UserContext } from "../UserContext";
 import { Link } from "react-router-dom";
+import NotFoundPage from "./NotFoundPage";
 
 export default function PostPage() {
   const [postInfo, setPostInfo] = useState(null);
+  const [error, setError] = useState(null);
   const { userInfo } = useContext(UserContext);
   const { id } = useParams();
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_APP_API_URL}/post/${id}`).then((response) => {
-      response.json().then((postInfo) => {
+    fetch(`${import.meta.env.VITE_APP_API_URL}/post/${id}`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Post not found");
+        }
+        return response.json();
+      })
+      .then((postInfo) => {
         setPostInfo(postInfo);
+      })
+      .catch((error) => {
+        setError(error);
       });
-    });
   }, [id]);
+
+  if (error) {
+    return <NotFoundPage />;
+  }
 
   if (!postInfo) return "";
 

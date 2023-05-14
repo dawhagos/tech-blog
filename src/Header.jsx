@@ -6,17 +6,15 @@ export default function Header() {
   const { setUserInfo, userInfo } = useContext(UserContext);
   const username = userInfo?.username;
   useEffect(() => {
-    if (userInfo !== null && username) {
-      fetch(`${import.meta.env.VITE_APP_API_URL}/profile`, {
-        credentials: "include",
-      }).then((response) => {
-        if (response.status !== 401) {
-          response.json().then((userInfo) => {
-            setUserInfo(userInfo);
-          });
-        }
-      });
-    }
+    fetch(`${import.meta.env.VITE_APP_API_URL}/profile`, {
+      credentials: "include",
+    }).then((response) => {
+      if (response.status !== 401) {
+        response.json().then((userInfo) => {
+          setUserInfo(userInfo);
+        });
+      }
+    });
   }, []);
 
   function logout() {
@@ -30,6 +28,7 @@ export default function Header() {
       })
       .catch((err) => {
         console.log(err);
+        alert("There was a problem logging out. Please try again later.");
       });
   }
 

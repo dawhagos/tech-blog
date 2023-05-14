@@ -1,13 +1,14 @@
-import './App.css';
-import {Route, Routes} from "react-router-dom";
+import "./App.css";
+import { Route, Routes } from "react-router-dom";
 import Layout from "./Layout";
 import IndexPage from "./pages/IndexPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
-import {UserContextProvider} from "./UserContext";
+import { UserContextProvider } from "./UserContext";
 import CreatePost from "./pages/CreatePost";
 import PostPage from "./pages/PostPage";
 import EditPost from "./pages/EditPost";
+import NotFoundPage from "./pages/NotFoundPage";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
           <Route path="/post/:id" element={<PostPage />} />
           <Route path="/edit/:id" element={<EditPost />} />
         </Route>
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </UserContextProvider>
   );
